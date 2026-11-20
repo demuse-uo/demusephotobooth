@@ -1,0 +1,421 @@
+/* ===== FONT DARI FILE SENDIRI ===== */
+@font-face {
+  font-family: 'Mallica';
+  src: url('fonts/MallicaFairytale.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Horizon';
+  src: url('fonts/Horizon.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bubblegum';
+  src: url('fonts/Bubblegum.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Anak Manja';
+  src: url('fonts/AnakManja.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kopi Senja';
+  src: url('fonts/KopiSenjaSans.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kopi Senja Script';
+  src: url('fonts/KopiSenjaScript.otf') format('opentype');
+  font-display: swap;
+}
+
+/* ===== WARNA ===== */
+:root {
+  --cream: #fbffdf;
+  --kuning: #fff5b2;
+  --mint: #bfeac8;
+  --hijau: #6d9c77;
+  --gelap: #3a3a3a;
+  --abu: #777777;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--cream);
+  color: var(--gelap);
+  min-height: 100vh;
+}
+
+/* ===== HEADER ===== */
+.header {
+  text-align: center;
+  padding: 32px 20px 20px;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--hijau);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.header h1 {
+  font-family: 'Mallica', serif;
+  font-weight: normal;
+  font-size: clamp(36px, 9vw, 56px);
+  color: var(--hijau);
+}
+
+.header p {
+  margin-top: 6px;
+  font-size: 15px;
+  color: var(--abu);
+}
+
+/* ===== LAYOUT ===== */
+.booth {
+  display: grid;
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 16px 48px;
+}
+
+/* ===== PANEL ===== */
+.panel {
+  background: white;
+  border-radius: 24px;
+  padding: 20px;
+  border: 2px solid var(--gelap);
+  box-shadow: 6px 6px 0 var(--kuning);
+}
+
+.group + .group {
+  margin-top: 24px;
+}
+
+.group h2 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+/* ===== DAFTAR BINGKAI ===== */
+.frame-list {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;      /* bisa digeser kalau bingkainya banyak */
+  padding-bottom: 6px;
+}
+
+.frame-item {
+  flex: 0 0 auto;
+  width: 90px;
+  padding: 6px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: var(--cream);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--gelap);
+  transition: 0.2s;
+}
+
+.frame-item img {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+  background: #e8e8e8; /* supaya lubang transparan kelihatan */
+  margin-bottom: 4px;
+}
+
+.frame-item.active {
+  border-color: var(--hijau);
+  background: var(--mint);
+  font-weight: 700;
+}
+
+/* ===== PILIHAN TULISAN LOGO ===== */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.opt {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 14px;
+  border: 2px solid var(--gelap);
+  border-radius: 999px;
+  background: white;
+  color: var(--gelap);
+  cursor: pointer;
+}
+
+.opt.active {
+  background: var(--mint);
+  font-weight: 700;
+}
+
+/* ===== DAFTAR FILTER ===== */
+.filter-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.filter-item {
+  flex: 0 0 auto;
+  width: 70px;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--gelap);
+}
+
+.filter-item canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.filter-item.active {
+  border-color: var(--hijau);
+  background: var(--mint);
+  font-weight: 700;
+}
+
+/* ===== KAMERA ===== */
+#camera {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--gelap);
+  border-radius: 16px;
+  display: none;
+  transform: scaleX(-1); /* efek cermin */
+}
+
+#camera.on {
+  display: block;
+}
+
+/* ===== TOMBOL ===== */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border: 2px solid var(--gelap);
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--gelap);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-outline {
+  background: white;
+}
+
+.counter {
+  margin: 14px 0 8px;
+  font-size: 14px;
+}
+
+#count {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--hijau);
+}
+
+/* ===== HASIL ===== */
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Pembungkus canvas: patokan posisi editor */
+.canvas-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+}
+
+#canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  background: white;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--abu);
+}
+
+/* ===== EDIT LANGSUNG DI GAMBAR ===== */
+.sorot {
+  position: absolute;
+  display: none;
+  border: 2px dashed var(--hijau);
+  border-radius: 6px;
+  background: rgba(191, 234, 200, 0.2);
+  pointer-events: none; /* supaya klik tembus ke canvas */
+}
+
+.editor {
+  position: absolute;
+  display: none;
+  width: 270px;
+  max-width: 100%;
+  padding: 8px;
+  background: white;
+  border: 2px solid var(--gelap);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--kuning);
+  z-index: 10;
+}
+
+.editor textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 6px 10px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  resize: vertical;
+}
+
+.editor textarea:focus {
+  outline: none;
+  border-color: var(--hijau);
+}
+
+.editor-alat {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.editor-alat select {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: white;
+}
+
+.editor-alat button {
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 13px;
+  width: 36px;
+  border: 2px solid var(--gelap);
+  border-radius: 10px;
+  background: var(--cream);
+  cursor: pointer;
+}
+
+#btnSelesai {
+  background: var(--mint);
+}
+
+/* Pilihan warna */
+.editor-warna {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.warna {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  cursor: pointer;
+  padding: 0;
+}
+
+.warna.active {
+  border-color: var(--gelap);
+  transform: scale(1.15);
+}
+
+.warna-bebas {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.warna-bebas input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;   /* disembunyikan, yang kelihatan ikon 🎨 */
+  cursor: pointer;
+}
+
+/* ===== LAPTOP: 2 KOLOM ===== */
+@media (min-width: 768px) {
+  .booth {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .result {
+    position: sticky;
+    top: 20px;
+  }
+}

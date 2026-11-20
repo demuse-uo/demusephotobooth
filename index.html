@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photobooth | deMuse</title>
+
+  <!-- Font Inter dari Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Unbounded:wght@700;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="header">
+    <a href="../index.html" class="back">← Kembali</a>
+    <h1>deMuse Photobooth</h1>
+    <p>Pilih bingkai, isi fotonya, lalu simpan ke galeri!</p>
+  </header>
+
+  <main class="booth">
+
+    <!-- PENGATURAN -->
+    <section class="panel">
+
+      <!-- Pilih bingkai -->
+      <div class="group">
+        <h2>1. Pilih bingkai</h2>
+        <div class="frame-list" id="frameList">
+          <!-- tombol bingkai dibuat otomatis oleh JavaScript -->
+        </div>
+      </div>
+
+      <!-- Ambil foto -->
+      <div class="group">
+        <h2>2. Ambil foto</h2>
+
+        <video id="camera" autoplay playsinline></video>
+
+        <div class="actions">
+          <button id="btnCamera" class="btn">📷 Buka Kamera</button>
+          <button id="btnSnap" class="btn" disabled>Jepret</button>
+          <label class="btn btn-outline">
+            🖼️ Dari Album
+            <input type="file" id="fileInput" accept="image/*" multiple hidden>
+          </label>
+        </div>
+
+        <p class="counter">
+          <span id="count">0</span>/<span id="max">3</span> foto
+        </p>
+        <button id="btnReset" class="btn btn-outline">Ulangi</button>
+      </div>
+
+      <!-- Pilih tulisan logo (hanya muncul di bingkai yang punya pilihan) -->
+      <div class="group" id="logoGroup">
+        <h2>Pilih tulisan logo</h2>
+        <div class="options" id="logoList">
+          <!-- tombol dibuat otomatis oleh JavaScript -->
+        </div>
+      </div>
+
+      <!-- Pilih filter -->
+      <div class="group" id="filterGroup">
+        <h2>3. Pilih filter</h2>
+        <div class="filter-list" id="filterList">
+          <!-- tombol filter dibuat otomatis oleh JavaScript -->
+        </div>
+      </div>
+
+
+    </section>
+
+    <!-- HASIL -->
+    <section class="result">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="canvas"></canvas>
+
+        <!-- Kotak putus-putus di tulisan yang dipilih -->
+        <div class="sorot" id="sorot"></div>
+
+        <!-- Editor kecil yang muncul saat tulisan diklik -->
+        <div class="editor" id="editor">
+          <textarea id="editorTeks" rows="2"></textarea>
+          <div class="editor-alat">
+            <select id="editorFont">
+              <option value="Inter" style="font-family: Inter">Inter</option>
+              <option value="Horizon" style="font-family: Horizon">Horizon</option>
+              <option value="Unbounded" style="font-family: Unbounded">Unbounded</option>
+              <option value="Mallica" style="font-family: Mallica">Mallica Fairytale</option>
+              <option value="Bubblegum" style="font-family: Bubblegum">Bubblegum</option>
+              <option value='"Anak Manja"' style="font-family: 'Anak Manja'">Anak Manja</option>
+              <option value='"Kopi Senja"' style="font-family: 'Kopi Senja'">Kopi Senja Sans</option>
+              <option value='"Kopi Senja Script"' style="font-family: 'Kopi Senja Script'">Kopi Senja Script</option>
+              <option value='"Playfair Display"' style="font-family: 'Playfair Display'">Playfair Display</option>
+              <option value='italic|"Playfair Display"' style="font-family: 'Playfair Display'; font-style: italic">Playfair Display Italic</option>
+            </select>
+            <button type="button" id="btnKecil" title="Perkecil">A−</button>
+            <button type="button" id="btnBesar" title="Perbesar">A+</button>
+            <button type="button" id="btnSelesai" title="Selesai">✓</button>
+          </div>
+
+          <!-- Pilihan warna tulisan -->
+          <div class="editor-warna" id="editorWarna">
+            <!-- kotak warna dibuat otomatis oleh JavaScript -->
+            <label class="warna-bebas" title="Warna lain">
+              🎨
+              <input type="color" id="warnaBebas">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <p class="hint">Ketuk tulisan untuk mengedit ✏️ · Tahan &amp; geser untuk memindahkan ✋</p>
+      <button id="btnDownload" class="btn" disabled>⬇️ Download</button>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
