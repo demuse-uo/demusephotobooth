@@ -13,6 +13,13 @@ const PILIHAN_LOGO = [
 ];
 
 // Untuk bingkai Bubble: tulisan atas (Mallica) + tulisan bawah (Bubblegum)
+// Untuk bingkai Today's Diary: username ikut berganti
+const PILIHAN_LOGO_DIARY = [
+  { nama: 'de Muse cohort',      isi: { 'username': '@demuse.cohort',    'username-label': '@demuse.cohort' } },
+  { nama: 'de Muse of the Year', isi: { 'username': '@demuse.oftheyear', 'username-label': '@demuse.oftheyear' } },
+  { nama: 'member of de Muse',   isi: { 'username': '@memberofdemuse',   'username-label': '@memberofdemuse' } }
+];
+
 const PILIHAN_LOGO_BUBBLE = [
   { nama: 'de Muse cohort',      isi: { 'logo-atas': 'DE MUSE',   'logo-bawah': 'COHORT' } },
   { nama: 'de Muse of the Year', isi: { 'logo-atas': 'DE MUSE',   'logo-bawah': 'OF THE YEAR' } },
@@ -38,7 +45,7 @@ const FRAMES = [
     // \n = pindah baris
     teks: [
       // Bar atas
-      { label: 'Username', teks: '@demuse.cohort', x: 138, y: 119, font: '700 30px Inter', warna: '#666666' },
+      { label: 'Username', grup: 'username', teks: '@demuse.cohort', x: 138, y: 119, font: '700 30px Inter', warna: '#666666' },
       { label: 'Teks setelah username', teks: '  just posted a new story', ikuti: true, y: 119, font: '400 27px Inter', warna: '#7a7a7a' },
 
       // Kolom search
@@ -67,7 +74,7 @@ const FRAMES = [
       { label: 'Tombol', teks: 'view more', x: 807, y: 1015, rata: 'center', font: '800 42px Inter', warna: '#3a3a3a' },
 
       // Label di foto kanan
-      { label: 'Label di foto 2', teks: '@demuse.cohort', x: 719, y: 648, rata: 'center', font: '600 13px Inter', warna: '#333333' },
+      { label: 'Label di foto 2', grup: 'username-label', lebarPas: 106, teks: '@demuse.cohort', x: 719, y: 648, rata: 'center', font: '600 13px Inter', warna: '#333333' },
 
       // Bubble kuning di foto bawah
       { label: 'Bubble kuning 1', teks: 'jangan difoto dulu!"', x: 100, y: 930, font: '600 14px Inter', warna: '#3a3a3a' },
@@ -78,7 +85,9 @@ const FRAMES = [
       { label: 'Tulisan foto 1 (bawah)', teks: 'senyum dulu\nbiar\nkelihatan\nhappy', x: 158, y: 587, rata: 'center', font: '17px "Kopi Senja"', warna: '#ffffff', garis: '#3a3a3a', jarakBaris: 21 },
       { label: 'Tulisan foto 2', teks: "for my\nmom's\ngallery 💌", x: 905, y: 862, rata: 'center', font: '19px "Kopi Senja Script"', warna: '#ffffff', garis: '#3a3a3a', jarakBaris: 21, putar: 18 },
       { label: 'Tulisan foto 3', teks: 'be honest, outfit hari ini udah\nkayak anak indie belum? atau masih\nkayak mau ke warung? 🤔', x: 180, y: 1256, rata: 'center', font: '17px "Kopi Senja"', warna: '#ffffff', garis: '#3a3a3a', jarakBaris: 21 }
-    ]
+    ],
+
+    pilihanTulisan: PILIHAN_LOGO_DIARY
   },
 
   {
@@ -100,7 +109,7 @@ const FRAMES = [
     ],
 
     teks: [
-      { label: 'Username', teks: '@demuse.cohort', x: 138, y: 128, font: '700 30px Inter', warna: '#666666' },
+      { label: 'Username', grup: 'username', teks: '@demuse.cohort', x: 138, y: 128, font: '700 30px Inter', warna: '#666666' },
       { label: 'Teks setelah username', teks: '  just posted instagram story', ikuti: true, y: 128, font: '400 27px Inter', warna: '#7a7a7a' },
       { label: 'Tombol kanan atas', teks: 'archive', x: 870, y: 128, font: '700 28px Inter', warna: '#6b6b6b' },
       { label: 'Kolom search', teks: 'sunday slow day bareng deMuse', x: 137, y: 236, font: '400 26px Inter', warna: '#5a5a5a' },
@@ -115,14 +124,16 @@ const FRAMES = [
       { label: 'Bubble kamera (baris 2)', teks: 'Singapore', x: 255, y: 730, font: '700 27px Inter', warna: '#7a7a7a' },
       { label: 'Now playing', teks: 'now playing: Somewhere Only We Know', x: 130, y: 857, font: '400 22px Inter', warna: '#ffffff' },
       { label: 'Tombol', teks: 'view more', x: 787, y: 1063, rata: 'center', font: '800 42px Inter', warna: '#3a3a3a' },
-      { label: 'Label di foto 2', teks: '@demuse.cohort', x: 698, y: 697, rata: 'center', font: '600 13px Inter', warna: '#333333' },
+      { label: 'Label di foto 2', grup: 'username-label', lebarPas: 106, teks: '@demuse.cohort', x: 698, y: 697, rata: 'center', font: '600 13px Inter', warna: '#333333' },
       { label: 'Bubble kuning 1', teks: 'jangan difoto dulu!"', x: 105, y: 984, font: '600 14px Inter', warna: '#3a3a3a' },
       { label: 'Bubble kuning 2', teks: 'posenya berantakan', x: 105, y: 1028, font: '600 14px Inter', warna: '#3a3a3a' },
       { label: 'Tulisan foto 1 (atas)', teks: 'pura-pura\ncandid\npadahal\nudah take\n20x', x: 438, y: 331, rata: 'center', font: '17px "Kopi Senja"', warna: '#ffffff', garis: '#3a3a3a', jarakBaris: 21 },
       { label: 'Tulisan foto 1 (bawah)', teks: 'senyum dulu\nbiar\nkelihatan\nhappy', x: 162, y: 611, rata: 'center', font: '17px "Kopi Senja"', warna: '#ffffff', garis: '#3a3a3a', jarakBaris: 21 },
       { label: 'Tulisan foto 2', teks: "for my\nmom's\ngallery 💌", x: 885, y: 911, rata: 'center', font: '19px "Kopi Senja Script"', warna: '#ffffff', garis: '#3a3a3a', jarakBaris: 21, putar: 18 },
       { label: 'Tulisan foto 3', teks: 'be honest, outfit hari ini udah\nkayak anak indie belum? atau masih\nkayak mau ke warung? 🤔', x: 185, y: 1306, rata: 'center', font: '17px "Kopi Senja"', warna: '#ffffff', garis: '#3a3a3a', jarakBaris: 21 }
-    ]
+    ],
+
+    pilihanTulisan: PILIHAN_LOGO_DIARY
   },
 
   {
@@ -291,6 +302,8 @@ const editorFont = $('editorFont');
 const editorWarna = $('editorWarna');
 const warnaBebas = $('warnaBebas');
 const zoomFoto = $('zoomFoto');
+const btnUndo = $('btnUndo');
+const btnRedo = $('btnRedo');
 
 let frameAktif = FRAMES[0];
 let gambarFrame = new Image();
@@ -306,6 +319,84 @@ let kameraDepan = true;
 let sedangJepret = false;
 
 const filterDidukung = 'filter' in ctx; // iPhone/Safari: belum
+
+
+/* =========================================================
+   2b. UNDO & REDO
+   Sebelum ada perubahan, keadaan sekarang dicatat dulu.
+   ========================================================= */
+let riwayat = []; // keadaan-keadaan sebelumnya (untuk undo)
+let maju = [];    // keadaan yang di-undo (untuk redo)
+
+// Foto keadaan sekarang: tulisan, posisi foto, filter, bingkai
+function ambilKeadaan() {
+  return JSON.stringify({
+    frame: FRAMES.indexOf(frameAktif),
+    filter: FILTER.indexOf(filterAktif),
+    atur: frameAktif.atur || {},
+    teks: frameAktif.teks.map(t => ({
+      teks: t.teks, x: t.x, y: t.y, font: t.font,
+      warna: t.warna, ikuti: t.ikuti, jarakBaris: t.jarakBaris
+    }))
+  });
+}
+
+// Panggil SEBELUM mengubah sesuatu
+function catat() {
+  const k = ambilKeadaan();
+  if (riwayat[riwayat.length - 1] !== k) riwayat.push(k);
+  if (riwayat.length > 60) riwayat.shift(); // simpan 60 langkah terakhir
+  maju = [];
+  updateUndo();
+}
+
+function terapkanKeadaan(k) {
+  const d = JSON.parse(k);
+  const frame = FRAMES[d.frame];
+  frame.atur = d.atur;
+  frame.teks.forEach((t, i) => Object.assign(t, d.teks[i]));
+  pilihFilter(FILTER[d.filter]);
+
+  if (frame !== frameAktif) pilihFrame(frame);
+  else {
+    selesaiEdit();
+    buatPilihanLogo();
+    gambarSemua();
+  }
+}
+
+function undo() {
+  const sekarang = ambilKeadaan();
+  // lewati catatan yang sama dengan keadaan sekarang
+  while (riwayat.length && riwayat[riwayat.length - 1] === sekarang) riwayat.pop();
+  if (!riwayat.length) return updateUndo();
+  maju.push(sekarang);
+  terapkanKeadaan(riwayat.pop());
+  updateUndo();
+}
+
+function redo() {
+  if (!maju.length) return;
+  riwayat.push(ambilKeadaan());
+  terapkanKeadaan(maju.pop());
+  updateUndo();
+}
+
+function updateUndo() {
+  btnUndo.disabled = !riwayat.some(k => k !== ambilKeadaan());
+  btnRedo.disabled = !maju.length;
+}
+
+btnUndo.addEventListener('click', undo);
+btnRedo.addEventListener('click', redo);
+
+// Keyboard laptop: Ctrl+Z = undo, Ctrl+Shift+Z / Ctrl+Y = redo
+document.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.target === editorTeks) return;
+  const k = e.key.toLowerCase();
+  if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+  if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo(); }
+});
 
 
 /* =========================================================
@@ -353,8 +444,8 @@ FRAMES.forEach((frame, i) => {
   btn.innerHTML = `<img src="${frame.gambar}" alt="">${frame.nama}`;
 
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.frame-item').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    if (frame === frameAktif) return;
+    catat();
     pilihFrame(frame);
   });
 
@@ -368,6 +459,9 @@ function jumlahFoto(frame) {
 
 function pilihFrame(frame) {
   frameAktif = frame;
+  document.querySelectorAll('.frame-item').forEach((b, i) => {
+    b.classList.toggle('active', FRAMES[i] === frame);
+  });
   frame.atur = frame.atur || {}; // posisi & zoom foto per slot
   fotoList = fotoList.slice(0, jumlahFoto(frame));
   canvas.width = frame.lebar;
@@ -401,14 +495,21 @@ FILTER.forEach((f, i) => {
   btn.append(f.nama);
 
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-item').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    filterAktif = f;
+    if (f === filterAktif) return;
+    catat();
+    pilihFilter(f);
     gambarSemua();
   });
 
   filterList.appendChild(btn);
 });
+
+function pilihFilter(f) {
+  filterAktif = f;
+  document.querySelectorAll('.filter-item').forEach((b, i) => {
+    b.classList.toggle('active', FILTER[i] === f);
+  });
+}
 
 function perbaruiPreviewFilter() {
   const foto = fotoList.find(Boolean);
@@ -452,6 +553,7 @@ function buatPilihanLogo() {
     if (cocok) btn.classList.add('active');
 
     btn.addEventListener('click', () => {
+      catat();
       logoList.querySelectorAll('.opt').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       frameAktif.teks.forEach(t => {
@@ -705,6 +807,7 @@ function gambarSemua() {
   ctx.drawImage(gambarFrame, 0, 0, f.lebar, f.tinggi);
   gambarTeks(f.teks);
   posisikanSorot();
+  if (!aksi) updateUndo();
 }
 
 // Ukuran tampilan canvas: dibuat pas dengan ruang yang tersedia
@@ -793,6 +896,7 @@ canvas.addEventListener('pointerdown', (e) => {
   if (jari.size === 2 && slotAktif !== null) {
     const [a, b] = [...jari.values()];
     const atur = ambilAtur(slotAktif);
+    catat();
     aksi = { jenis: 'cubit', jarak: Math.hypot(a.x - b.x, a.y - b.y), z: atur.z };
     return;
   }
@@ -801,8 +905,10 @@ canvas.addEventListener('pointerdown', (e) => {
   const p = titikCanvas(e);
   const t = cariTeks(p);
   if (t) {
+    aksi = null;
+    const sebelum = ambilKeadaan();
     if (t.ikuti) { t.x = t._x; t.ikuti = false; }
-    aksi = { jenis: 'teks', t, dx: p.x - t.x, dy: p.y - t.y, mulai: p, pindah: false };
+    aksi = { jenis: 'teks', t, dx: p.x - t.x, dy: p.y - t.y, mulai: p, pindah: false, sebelum };
     return;
   }
 
@@ -832,6 +938,11 @@ canvas.addEventListener('pointermove', (e) => {
 
   if (aksi.jenis === 'teks' || aksi.jenis === 'foto') {
     if (!aksi.pindah && Math.hypot(p.x - aksi.mulai.x, p.y - aksi.mulai.y) < 8) return;
+    if (!aksi.pindah) {
+      // mulai digeser → catat posisi lama
+      if (aksi.sebelum) { riwayat.push(aksi.sebelum); maju = []; }
+      else catat();
+    }
     aksi.pindah = true;
   }
 
@@ -873,6 +984,7 @@ function lepasJari(e) {
   }
   if (aksi.jenis === 'kosong') selesaiEdit();
   aksi = null;
+  updateUndo();
 }
 canvas.addEventListener('pointerup', lepasJari);
 canvas.addEventListener('pointercancel', lepasJari);
@@ -894,12 +1006,14 @@ function bukaEditorTeks(t, fokus) {
   if (fokus) editorTeks.focus();
 }
 
+editorTeks.addEventListener('focus', catat); // catat sebelum mulai mengetik
 editorTeks.addEventListener('input', () => {
   samaGrup(teksAktif).forEach(t => t.teks = editorTeks.value);
   gambarSemua();
 });
 
 editorFont.addEventListener('change', () => {
+  catat();
   const bagian = editorFont.value.split('|');
   const nama = bagian.pop();
   const miring = bagian[0] === 'italic';
@@ -911,6 +1025,7 @@ editorFont.addEventListener('change', () => {
 });
 
 function ubahUkuran(selisih) {
+  catat();
   samaGrup(teksAktif).forEach(t => {
     const lama = parseInt(t.font.match(/(\d+)px/)[1]);
     const baru = Math.max(8, lama + selisih);
@@ -934,6 +1049,7 @@ WARNA.forEach(w => {
 });
 
 function gantiWarna(w) {
+  catat();
   samaGrup(teksAktif).forEach(t => t.warna = w);
   warnaBebas.value = w;
   tandaiWarna(w);
@@ -964,12 +1080,14 @@ function pilihSlot(i) {
   posisikanSorot();
 }
 
+zoomFoto.addEventListener('pointerdown', catat);
 zoomFoto.addEventListener('input', () => {
   ambilAtur(slotAktif).z = parseFloat(zoomFoto.value);
   gambarSemua();
 });
 
 $('btnResetFoto').addEventListener('click', () => {
+  catat();
   frameAktif.atur[slotAktif] = { z: 1, cx: 0.5, cy: 0.5 };
   zoomFoto.value = 1;
   gambarSemua();
