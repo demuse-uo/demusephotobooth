@@ -19,7 +19,7 @@
 
 @font-face {
   font-family: 'Anak Manja';
-  src: url('fonts/AnakManja.otf') format('opentype');
+  src: url('fonts/AnakManja.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -51,7 +51,12 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%; /* teks tidak membesar sendiri di iPhone */
+}
+
 body {
+  overflow-x: hidden; /* cegah halaman bisa digeser ke samping */
   font-family: 'Inter', sans-serif;
   background: var(--cream);
   color: var(--gelap);
@@ -89,6 +94,7 @@ body {
 /* ===== LAYOUT ===== */
 .booth {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* HP: 1 kolom, tidak melebar */
   gap: 24px;
   max-width: 1000px;
   margin: 0 auto;
@@ -417,5 +423,49 @@ body {
   .result {
     position: sticky;
     top: 20px;
+  }
+}
+
+/* ===== HP: dibuat lebih ringkas ===== */
+@media (max-width: 600px) {
+  .header {
+    padding: 20px 16px 12px;
+  }
+
+  .header p {
+    font-size: 14px;
+  }
+
+  .booth {
+    padding: 0 12px 40px;
+    gap: 18px;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .group + .group {
+    margin-top: 18px;
+  }
+
+  .frame-item {
+    width: 76px;
+    font-size: 11px;
+  }
+
+  .filter-item {
+    width: 60px;
+    font-size: 11px;
+  }
+
+  .btn {
+    font-size: 14px;
+    padding: 9px 14px;
+  }
+
+  .canvas-wrap {
+    max-width: 100%;
   }
 }

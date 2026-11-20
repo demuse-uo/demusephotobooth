@@ -362,8 +362,8 @@ function perbaruiPreviewFilter() {
   });
 }
 
-// Browser lama yang belum mendukung filter canvas → sembunyikan pilihan filter
-if (!('filter' in ctx)) filterGroup.style.display = 'none';
+// Apakah browser mendukung ctx.filter? (iPhone/Safari belum)
+const filterDidukung = 'filter' in ctx;
 
 function pilihFrame(frame) {
   frameAktif = frame;
@@ -448,10 +448,96 @@ function gambarFoto(img, s) {
   ctx.beginPath();
   ctx.roundRect(-s.w / 2, -s.h / 2, s.w, s.h, s.r);
   ctx.clip();
-  ctx.filter = filterAktif.nilai; // filter hanya untuk foto
-  ctx.drawImage(img, sx, sy, sw, sh, -s.w / 2, -s.h / 2, s.w, s.h);
-  ctx.filter = 'none';
+  if (filterDidukung || filterAktif.nilai === 'none') {
+    ctx.filter = filterAktif.nilai; // filter hanya untuk foto
+    ctx.drawImage(img, sx, sy, sw, sh, -s.w / 2, -s.h / 2, s.w, s.h);
+    ctx.filter = 'none';
+  } else {
+    // iPhone: filter dihitung manual per piksel
+    const hasil = fotoBerfilter(img, sx, sy, sw, sh, s.w, s.h);
+    ctx.drawImage(hasil, -s.w / 2, -s.h / 2, s.w, s.h);
+  }
   ctx.restore();
+}
+
+/* ----- Filter manual (untuk browser tanpa ctx.filter, misalnya iPhone) ----- */
+
+// Hasil disimpan supaya tidak dihitung ulang setiap kali tulisan diedit
+function fotoBerfilter(img, sx, sy, sw, sh, w, h) {
+  w = Math.round(w);
+  h = Math.round(h);
+  const kunci = [filterAktif.nilai, sx, sy, sw, sh, w, h].join('|');
+  img._simpan = img._simpan || {};
+  if (img._simpan[kunci]) return img._simpan[kunci];
+
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const x = c.getContext('2d');
+  x.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+
+  const data = x.getImageData(0, 0, w, h);
+  terapkanFilter(data.data, filterAktif.nilai);
+  x.putImageData(data, 0, 0);
+
+  img._simpan = { [kunci]: c }; // simpan 1 versi saja biar hemat memori
+  return c;
+}
+
+// Matriks warna untuk tiap jenis filter (rumus resmi CSS filter)
+function matriksFilter(nama, n) {
+  const a = 1 - Math.min(n, 1);
+  if (nama === 'grayscale') return [
+    0.2126 + 0.7874 * a, 0.7152 - 0.7152 * a, 0.0722 - 0.0722 * a,
+    0.2126 - 0.2126 * a, 0.7152 + 0.2848 * a, 0.0722 - 0.0722 * a,
+    0.2126 - 0.2126 * a, 0.7152 - 0.7152 * a, 0.0722 + 0.9278 * a
+  ];
+  if (nama === 'sepia') return [
+    0.393 + 0.607 * a, 0.769 - 0.769 * a, 0.189 - 0.189 * a,
+    0.349 - 0.349 * a, 0.686 + 0.314 * a, 0.168 - 0.168 * a,
+    0.272 - 0.272 * a, 0.534 - 0.534 * a, 0.131 + 0.869 * a
+  ];
+  if (nama === 'saturate') return [
+    0.213 + 0.787 * n, 0.715 - 0.715 * n, 0.072 - 0.072 * n,
+    0.213 - 0.213 * n, 0.715 + 0.285 * n, 0.072 - 0.072 * n,
+    0.213 - 0.213 * n, 0.715 - 0.715 * n, 0.072 + 0.928 * n
+  ];
+  if (nama === 'hue-rotate') {
+    const r = n * Math.PI / 180, cos = Math.cos(r), sin = Math.sin(r);
+    return [
+      0.213 + cos * 0.787 - sin * 0.213, 0.715 - cos * 0.715 - sin * 0.715, 0.072 - cos * 0.072 + sin * 0.928,
+      0.213 - cos * 0.213 + sin * 0.143, 0.715 + cos * 0.285 + sin * 0.140, 0.072 - cos * 0.072 - sin * 0.283,
+      0.213 - cos * 0.213 - sin * 0.787, 0.715 - cos * 0.715 + sin * 0.715, 0.072 + cos * 0.928 + sin * 0.072
+    ];
+  }
+  return null;
+}
+
+// Baca teks filter, contoh 'sepia(0.3) contrast(1.1)', lalu ubah tiap piksel
+function terapkanFilter(px, nilai) {
+  const langkah = [...nilai.matchAll(/([a-z-]+)\(([-\d.]+)/g)].map(m => [m[1], parseFloat(m[2])]);
+
+  langkah.forEach(([nama, n]) => {
+    const m = matriksFilter(nama, n);
+
+    for (let i = 0; i < px.length; i += 4) {
+      let r = px[i], g = px[i + 1], b = px[i + 2];
+
+      if (m) {
+        const r2 = m[0] * r + m[1] * g + m[2] * b;
+        const g2 = m[3] * r + m[4] * g + m[5] * b;
+        const b2 = m[6] * r + m[7] * g + m[8] * b;
+        r = r2; g = g2; b = b2;
+      } else if (nama === 'brightness') {
+        r *= n; g *= n; b *= n;
+      } else if (nama === 'contrast') {
+        const t = 128 * (1 - n);
+        r = r * n + t; g = g * n + t; b = b * n + t;
+      }
+
+      px[i] = r; px[i + 1] = g; px[i + 2] = b; // otomatis dibatasi 0–255
+    }
+  });
 }
 
 // Titik (0,0) dipindah ke tengah slot, lalu diputar kalau ada "putar"
