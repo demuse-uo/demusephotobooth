@@ -1273,6 +1273,47 @@ btnDownload.addEventListener('click', () => {
 
 
 /* =========================================================
+   13b. DERETAN GESER DI LAPTOP
+   Di HP cukup diusap. Di laptop: bisa pakai scroll mouse
+   atau klik-tahan lalu tarik ke samping.
+   ========================================================= */
+document.querySelectorAll('.baris-geser').forEach(el => {
+  // Scroll mouse (atas/bawah) → geser ke samping
+  el.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    }
+  }, { passive: false });
+
+  // Klik-tahan lalu tarik
+  let tarik = null;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    tarik = { x: e.clientX, kiri: el.scrollLeft, pindah: false };
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!tarik) return;
+    const geser = e.clientX - tarik.x;
+    if (Math.abs(geser) > 5) tarik.pindah = true;
+    if (tarik.pindah) {
+      el.scrollLeft = tarik.kiri - geser;
+      el.classList.add('ditarik');
+    }
+  });
+  window.addEventListener('pointerup', () => {
+    if (!tarik) return;
+    // habis ditarik → jangan sampai dianggap klik tombol
+    if (tarik.pindah) {
+      el.addEventListener('click', (e) => e.stopPropagation(), { capture: true, once: true });
+    }
+    tarik = null;
+    el.classList.remove('ditarik');
+  });
+});
+
+
+/* =========================================================
    14. MULAI — tunggu font siap dulu, baru gambar
    ========================================================= */
 Promise.all([

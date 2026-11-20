@@ -273,6 +273,34 @@ body {
   display: none;
 }
 
+.baris-geser.ditarik {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.baris-geser img {
+  -webkit-user-drag: none; /* gambar tidak ikut ter-drag */
+}
+
+/* Laptop (pakai mouse): tampilkan garis scroll tipis */
+@media (hover: hover) and (pointer: fine) {
+  .baris-geser {
+    scrollbar-width: thin;
+    scrollbar-color: var(--hijau) transparent;
+    padding-bottom: 8px;
+  }
+
+  .baris-geser::-webkit-scrollbar {
+    display: block;
+    height: 6px;
+  }
+
+  .baris-geser::-webkit-scrollbar-thumb {
+    background: var(--hijau);
+    border-radius: 99px;
+  }
+}
+
 .info {
   text-align: center;
   font-size: 12px;
@@ -532,6 +560,7 @@ body {
 /* ===== LAYAR LEBAR (laptop) ===== */
 @media (min-width: 700px) {
   .app {
+    max-width: 820px; /* laptop: lebih lebar, bingkai lebih banyak terlihat */
     padding: 10px 0;
   }
 
