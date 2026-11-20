@@ -260,48 +260,92 @@ const WARNA = [
 /* =========================================================
    2. ELEMEN & DATA
    ========================================================= */
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
 
-const frameList = document.getElementById('frameList');
-const video = document.getElementById('camera');
-const btnCamera = document.getElementById('btnCamera');
-const btnSnap = document.getElementById('btnSnap');
-const fileInput = document.getElementById('fileInput');
-const btnReset = document.getElementById('btnReset');
-const btnDownload = document.getElementById('btnDownload');
-const countEl = document.getElementById('count');
-const maxEl = document.getElementById('max');
-const sorot = document.getElementById('sorot');
-const editor = document.getElementById('editor');
-const editorTeks = document.getElementById('editorTeks');
-const editorFont = document.getElementById('editorFont');
-const btnKecil = document.getElementById('btnKecil');
-const btnBesar = document.getElementById('btnBesar');
-const btnSelesai = document.getElementById('btnSelesai');
-const editorWarna = document.getElementById('editorWarna');
-const warnaBebas = document.getElementById('warnaBebas');
-const filterList = document.getElementById('filterList');
-const filterGroup = document.getElementById('filterGroup');
-const logoGroup = document.getElementById('logoGroup');
-const logoList = document.getElementById('logoList');
+const canvas = $('canvas');
+const ctx = canvas.getContext('2d');
+const stage = $('stage');
+const canvasWrap = $('canvasWrap');
+const sorot = $('sorot');
+const video = $('camera');
+const kameraAlat = $('kameraAlat');
+const hitungEl = $('hitung');
+const tip = $('tip');
+
+const frameList = $('frameList');
+const filterList = $('filterList');
+const logoList = $('logoList');
+const tabLogo = $('tabLogo');
+
+const fileInput = $('fileInput');
+const gantiInput = $('gantiInput');
+const btnShutter = $('btnShutter');
+const btnReset = $('btnReset');
+const btnDownload = $('btnDownload');
+const countEl = $('count');
+const maxEl = $('max');
+const infoFoto = $('infoFoto');
+
+const editorTeks = $('editorTeks');
+const editorFont = $('editorFont');
+const editorWarna = $('editorWarna');
+const warnaBebas = $('warnaBebas');
+const zoomFoto = $('zoomFoto');
 
 let frameAktif = FRAMES[0];
 let gambarFrame = new Image();
-let fotoList = [];
-let stream = null;
-let teksAktif = null; // tulisan yang sedang diedit
+let fotoList = [];           // foto user (boleh ada yang kosong di tengah)
 let filterAktif = FILTER[0];
+let tabAktif = 'bingkai';
+
+let teksAktif = null;        // tulisan yang sedang diedit
+let slotAktif = null;        // nomor slot foto yang sedang diatur
+
+let stream = null;           // kamera
+let kameraDepan = true;
+let sedangJepret = false;
+
+const filterDidukung = 'filter' in ctx; // iPhone/Safari: belum
 
 
-// Jumlah foto yang perlu diisi user (slot "foto: x" tidak dihitung)
-function jumlahFoto(frame) {
-  return frame.slot.filter(s => s.foto === undefined).length;
+/* =========================================================
+   3. TAB & PANEL BAWAH
+   ========================================================= */
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => bukaTab(btn.dataset.tab));
+});
+
+function bukaTab(nama) {
+  tabAktif = nama;
+  lepasPilihan();
+  tampilkanPanel(nama);
+  document.querySelectorAll('.tabs button').forEach(b => {
+    b.classList.toggle('on', b.dataset.tab === nama);
+  });
+}
+
+// Tampilkan satu panel di bawah (bingkai/foto/filter/logo/teks/atur)
+function tampilkanPanel(nama) {
+  document.querySelectorAll('.panel').forEach(p => {
+    p.classList.toggle('on', p.dataset.panel === nama);
+  });
+}
+
+// Selesai mengedit tulisan / foto → kembali ke tab terakhir
+function lepasPilihan() {
+  teksAktif = null;
+  slotAktif = null;
+  sorot.style.display = 'none';
+}
+
+function selesaiEdit() {
+  lepasPilihan();
+  tampilkanPanel(tabAktif);
 }
 
 
 /* =========================================================
-   3. TOMBOL PILIH BINGKAI (dibuat otomatis)
+   4. DAFTAR BINGKAI
    ========================================================= */
 FRAMES.forEach((frame, i) => {
   const btn = document.createElement('button');
@@ -317,8 +361,33 @@ FRAMES.forEach((frame, i) => {
   frameList.appendChild(btn);
 });
 
+// Jumlah foto yang perlu diisi user (slot "foto: x" tidak dihitung)
+function jumlahFoto(frame) {
+  return frame.slot.filter(s => s.foto === undefined).length;
+}
+
+function pilihFrame(frame) {
+  frameAktif = frame;
+  frame.atur = frame.atur || {}; // posisi & zoom foto per slot
+  fotoList = fotoList.slice(0, jumlahFoto(frame));
+  canvas.width = frame.lebar;
+  canvas.height = frame.tinggi;
+
+  selesaiEdit();
+  buatPilihanLogo();
+
+  gambarFrame = new Image();
+  gambarFrame.onload = () => {
+    aturUkuranTampilan();
+    updateTampilan();
+    gambarSemua();
+  };
+  gambarFrame.src = frame.gambar;
+}
+
+
 /* =========================================================
-   3b. TOMBOL PILIH FILTER (dibuat otomatis)
+   5. DAFTAR FILTER
    ========================================================= */
 FILTER.forEach((f, i) => {
   const btn = document.createElement('button');
@@ -328,7 +397,6 @@ FILTER.forEach((f, i) => {
   mini.width = 120;
   mini.height = 120;
   mini.style.filter = f.nilai;
-
   btn.appendChild(mini);
   btn.append(f.nama);
 
@@ -342,12 +410,10 @@ FILTER.forEach((f, i) => {
   filterList.appendChild(btn);
 });
 
-// Isi preview kecil dengan foto pertama (atau warna contoh kalau belum ada foto)
 function perbaruiPreviewFilter() {
+  const foto = fotoList.find(Boolean);
   filterList.querySelectorAll('canvas').forEach(mini => {
     const m = mini.getContext('2d');
-    const foto = fotoList[0];
-
     if (foto) {
       const sisi = Math.min(foto.width, foto.height);
       m.drawImage(foto, (foto.width - sisi) / 2, (foto.height - sisi) / 2, sisi, sisi, 0, 0, 120, 120);
@@ -362,57 +428,37 @@ function perbaruiPreviewFilter() {
   });
 }
 
-// Apakah browser mendukung ctx.filter? (iPhone/Safari belum)
-const filterDidukung = 'filter' in ctx;
-
-function pilihFrame(frame) {
-  frameAktif = frame;
-  fotoList = fotoList.slice(0, jumlahFoto(frame)); // buang foto kelebihan
-  canvas.width = frame.lebar;
-  canvas.height = frame.tinggi;
-
-  tutupEditor();
-  buatPilihanLogo();
-
-  gambarFrame = new Image();
-  gambarFrame.onload = () => {
-    updateTampilan();
-    gambarSemua();
-  };
-  gambarFrame.src = frame.gambar;
-}
-
 
 /* =========================================================
-   3c. PILIHAN TULISAN LOGO
+   6. PILIHAN TULISAN LOGO
    ========================================================= */
 function buatPilihanLogo() {
   logoList.innerHTML = '';
   const pilihan = frameAktif.pilihanTulisan;
 
-  // Bingkai tanpa pilihan logo → sembunyikan bagian ini
-  logoGroup.style.display = pilihan ? 'block' : 'none';
-  if (!pilihan) return;
+  // Bingkai tanpa pilihan logo → tab Logo disembunyikan
+  tabLogo.style.display = pilihan ? '' : 'none';
+  if (!pilihan) {
+    if (tabAktif === 'logo') bukaTab('bingkai');
+    return;
+  }
 
-  pilihan.forEach((p, i) => {
+  pilihan.forEach(p => {
     const btn = document.createElement('button');
     btn.className = 'opt';
     btn.textContent = p.nama;
 
-    // tandai pilihan yang sedang dipakai
     const cocok = frameAktif.teks.every(t => !(t.grup in p.isi) || t.teks === p.isi[t.grup]);
     if (cocok) btn.classList.add('active');
 
     btn.addEventListener('click', () => {
       logoList.querySelectorAll('.opt').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
       frameAktif.teks.forEach(t => {
         if (t.grup in p.isi) t.teks = p.isi[t.grup];
         const pos = p.posisi && p.posisi[t.grup];
         if (pos && t[pos] !== undefined) t.y = t[pos];
       });
-      tutupEditor();
       gambarSemua();
     });
 
@@ -420,71 +466,81 @@ function buatPilihanLogo() {
   });
 }
 
-// Tulisan yang satu grup (misal logo atas & bawah) ikut berubah bersama
+// Tulisan satu grup (logo atas & bawah) ikut berubah bersama
 function samaGrup(t) {
   return t.grup ? frameAktif.teks.filter(x => x.grup === t.grup) : [t];
 }
 
 
 /* =========================================================
-   4. MENGGAMBAR
+   7. MENGGAMBAR
    ========================================================= */
 
-// Foto dipotong rapi seperti object-fit: cover
-function gambarFoto(img, s) {
+// Hitung bagian foto yang tampil di slot (bisa di-zoom & digeser)
+function potongFoto(img, s, atur) {
   const rasio = s.w / s.h;
-  let sx = 0, sy = 0, sw = img.width, sh = img.height;
+  let sw = img.width, sh = img.height;
+  if (sw / sh > rasio) sw = sh * rasio; // foto lebih lebar dari slot
+  else sh = sw / rasio;                  // foto lebih tinggi dari slot
 
-  if (sw / sh > rasio) {
-    sw = sh * rasio;
-    sx = (img.width - sw) / 2;
-  } else {
-    sh = sw / rasio;
-    sy = (img.height - sh) / 2;
+  const z = atur ? atur.z : 1;
+  sw /= z;
+  sh /= z;
+
+  // cx, cy = titik tengah (0–1), dibatasi supaya tidak keluar foto
+  let cx = (atur ? atur.cx : 0.5) * img.width;
+  let cy = (atur ? atur.cy : 0.5) * img.height;
+  cx = Math.min(Math.max(cx, sw / 2), img.width - sw / 2);
+  cy = Math.min(Math.max(cy, sh / 2), img.height - sh / 2);
+  if (atur) {
+    atur.cx = cx / img.width;
+    atur.cy = cy / img.height;
   }
 
+  return { sx: cx - sw / 2, sy: cy - sh / 2, sw, sh };
+}
+
+function gambarFoto(img, s, atur) {
+  const { sx, sy, sw, sh } = potongFoto(img, s, atur);
+
   ctx.save();
-  putarSlot(s); // pindah ke tengah slot & miringkan
+  putarSlot(s);
   ctx.beginPath();
   ctx.roundRect(-s.w / 2, -s.h / 2, s.w, s.h, s.r);
   ctx.clip();
+
   if (filterDidukung || filterAktif.nilai === 'none') {
     ctx.filter = filterAktif.nilai; // filter hanya untuk foto
     ctx.drawImage(img, sx, sy, sw, sh, -s.w / 2, -s.h / 2, s.w, s.h);
     ctx.filter = 'none';
   } else {
-    // iPhone: filter dihitung manual per piksel
-    const hasil = fotoBerfilter(img, sx, sy, sw, sh, s.w, s.h);
+    const hasil = fotoBerfilter(img, sx, sy, sw, sh, s.w, s.h); // iPhone
     ctx.drawImage(hasil, -s.w / 2, -s.h / 2, s.w, s.h);
   }
   ctx.restore();
 }
 
-/* ----- Filter manual (untuk browser tanpa ctx.filter, misalnya iPhone) ----- */
-
-// Hasil disimpan supaya tidak dihitung ulang setiap kali tulisan diedit
+/* ----- Filter manual (browser tanpa ctx.filter, misalnya iPhone) ----- */
 function fotoBerfilter(img, sx, sy, sw, sh, w, h) {
   w = Math.round(w);
   h = Math.round(h);
-  const kunci = [filterAktif.nilai, sx, sy, sw, sh, w, h].join('|');
-  img._simpan = img._simpan || {};
-  if (img._simpan[kunci]) return img._simpan[kunci];
+  const kunci = [filterAktif.nilai, sx | 0, sy | 0, sw | 0, sh | 0, w, h].join('|');
+  if (img._simpan && img._simpan.kunci === kunci) return img._simpan.hasil;
 
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
   const x = c.getContext('2d');
   x.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
-
   const data = x.getImageData(0, 0, w, h);
   terapkanFilter(data.data, filterAktif.nilai);
   x.putImageData(data, 0, 0);
 
-  img._simpan = { [kunci]: c }; // simpan 1 versi saja biar hemat memori
+  img._simpan = { kunci, hasil: c }; // simpan 1 versi saja biar hemat memori
   return c;
 }
 
-// Matriks warna untuk tiap jenis filter (rumus resmi CSS filter)
+// Matriks warna tiap jenis filter (rumus resmi CSS filter)
 function matriksFilter(nama, n) {
   const a = 1 - Math.min(n, 1);
   if (nama === 'grayscale') return [
@@ -513,16 +569,12 @@ function matriksFilter(nama, n) {
   return null;
 }
 
-// Baca teks filter, contoh 'sepia(0.3) contrast(1.1)', lalu ubah tiap piksel
 function terapkanFilter(px, nilai) {
   const langkah = [...nilai.matchAll(/([a-z-]+)\(([-\d.]+)/g)].map(m => [m[1], parseFloat(m[2])]);
-
   langkah.forEach(([nama, n]) => {
     const m = matriksFilter(nama, n);
-
     for (let i = 0; i < px.length; i += 4) {
       let r = px[i], g = px[i + 1], b = px[i + 2];
-
       if (m) {
         const r2 = m[0] * r + m[1] * g + m[2] * b;
         const g2 = m[3] * r + m[4] * g + m[5] * b;
@@ -534,8 +586,7 @@ function terapkanFilter(px, nilai) {
         const t = 128 * (1 - n);
         r = r * n + t; g = g * n + t; b = b * n + t;
       }
-
-      px[i] = r; px[i + 1] = g; px[i + 2] = b; // otomatis dibatasi 0–255
+      px[i] = r; px[i + 1] = g; px[i + 2] = b;
     }
   });
 }
@@ -554,9 +605,8 @@ function gambarSlotKosong(s, nomor) {
   ctx.beginPath();
   ctx.roundRect(-s.w / 2, -s.h / 2, s.w, s.h, s.r);
   ctx.fill();
-
   ctx.fillStyle = '#b8c6cc';
-  ctx.font = `800 ${Math.min(80, s.h / 2)}px Inter`; // angka mengecil di slot kecil
+  ctx.font = `800 ${Math.min(80, s.h / 2)}px Inter`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(nomor, 0, 0);
@@ -568,7 +618,6 @@ function bungkusTeks(teks, lebarMax) {
   const kata = teks.split(' ');
   const baris = [];
   let sekarang = '';
-
   kata.forEach(k => {
     const coba = sekarang ? sekarang + ' ' + k : k;
     if (ctx.measureText(coba).width > lebarMax && sekarang) {
@@ -593,14 +642,12 @@ function gambarTeks(daftar) {
     ctx.textAlign = t.rata || 'left';
 
     const x = t.ikuti ? ujungKanan : t.x;
-    t._x = x; // posisi x sebenarnya (dipakai saat digeser)
+    t._x = x;
     const jarak = t.jarakBaris || 0;
 
-    // Pisah baris: pakai \n, atau otomatis kalau ada lebarMax
     let baris = t.teks.split('\n');
     if (t.lebarMax) baris = bungkusTeks(t.teks, t.lebarMax);
 
-    // Simpan kotak area tulisan → dipakai untuk deteksi klik
     let ukuran = parseInt(t.font.match(/(\d+)px/)[1]);
     let lebar = Math.max(...baris.map(b => ctx.measureText(b).width), 40);
 
@@ -609,8 +656,9 @@ function gambarTeks(daftar) {
     if (t.lebarPas && lebar > t.lebarPas) {
       skala = t.lebarPas / lebar;
       lebar = t.lebarPas;
-      ukuran = ukuran * skala;
+      ukuran *= skala;
     }
+
     let kiri = x;
     if (ctx.textAlign === 'center') kiri = x - lebar / 2;
     if (ctx.textAlign === 'right') kiri = x - lebar;
@@ -621,7 +669,6 @@ function gambarTeks(daftar) {
       h: ukuran * 1.3 + (baris.length - 1) * jarak * skala + 8
     };
 
-    // Putar teks (derajat)
     ctx.translate(x, t.y);
     if (t.putar) ctx.rotate(t.putar * Math.PI / 180);
     if (skala < 1) ctx.scale(skala, skala);
@@ -644,213 +691,225 @@ function gambarTeks(daftar) {
 // Gambar semuanya: foto → bingkai → teks
 function gambarSemua() {
   const f = frameAktif;
-  ctx.fillStyle = f.latar || '#ffffff'; // warna latar belakang
+  ctx.fillStyle = f.latar || '#ffffff';
   ctx.fillRect(0, 0, f.lebar, f.tinggi);
 
-  // Digambar dari slot terakhir, supaya foto yang nomornya
-  // lebih kecil selalu ada di atas kalau lubangnya bertumpuk
+  // Dari slot terakhir, supaya slot bernomor kecil ada di atas
   for (let i = f.slot.length - 1; i >= 0; i--) {
     const s = f.slot[i];
-    const nomor = s.foto ?? i; // pakai ulang foto lain kalau ada "foto: x"
-    if (fotoList[nomor]) gambarFoto(fotoList[nomor], s);
+    const nomor = s.foto ?? i;
+    if (fotoList[nomor]) gambarFoto(fotoList[nomor], s, f.atur[i]);
     else gambarSlotKosong(s, nomor + 1);
   }
 
   ctx.drawImage(gambarFrame, 0, 0, f.lebar, f.tinggi);
   gambarTeks(f.teks);
+  posisikanSorot();
 }
+
+// Ukuran tampilan canvas: dibuat pas dengan ruang yang tersedia
+function aturUkuranTampilan() {
+  const ruangW = stage.clientWidth - 28;
+  const ruangH = stage.clientHeight - 8;
+  const skala = Math.min(ruangW / canvas.width, ruangH / canvas.height);
+  canvasWrap.style.width = canvas.width * skala + 'px';
+  canvasWrap.style.height = canvas.height * skala + 'px';
+  posisikanSorot();
+}
+window.addEventListener('resize', aturUkuranTampilan);
 
 
 /* =========================================================
-   4b. EDIT TULISAN LANGSUNG DI GAMBAR
+   8. KETUK & GESER DI GAMBAR
    ========================================================= */
 
-// Ubah posisi klik (piksel layar) jadi posisi di canvas
+// Posisi jari/mouse (layar) → posisi di canvas
 function titikCanvas(e) {
   const rect = canvas.getBoundingClientRect();
   const skala = canvas.width / rect.width;
-  return {
-    x: (e.clientX - rect.left) * skala,
-    y: (e.clientY - rect.top) * skala
-  };
+  return { x: (e.clientX - rect.left) * skala, y: (e.clientY - rect.top) * skala };
 }
 
-// Cari tulisan yang ada di titik itu
 function cariTeks(p) {
-  const daftar = [...frameAktif.teks].reverse(); // yang paling atas dicek dulu
-  return daftar.find(t => {
+  return [...frameAktif.teks].reverse().find(t => {
     const k = t._kotak;
     return k && p.x >= k.x && p.x <= k.x + k.w && p.y >= k.y && p.y <= k.y + k.h;
   });
 }
 
-// Ambil nama font dari teks, contoh: '700 30px Inter' → 'Inter'
-function namaFont(t) {
-  return t.font.match(/px (.+)$/)[1];
+// Ubah titik canvas ke koordinat di dalam slot (memperhitungkan kemiringan)
+function titikDiSlot(p, s) {
+  const a = -(s.putar || 0) * Math.PI / 180;
+  const dx = p.x - (s.x + s.w / 2);
+  const dy = p.y - (s.y + s.h / 2);
+  return {
+    x: dx * Math.cos(a) - dy * Math.sin(a),
+    y: dx * Math.sin(a) + dy * Math.cos(a)
+  };
 }
 
-function bukaEditor(t) {
-  teksAktif = t;
-  editorTeks.value = t.teks;
-  editorTeks.placeholder = t.label || '';
-  editorFont.value = (t.font.startsWith('italic') ? 'italic|' : '') + namaFont(t);
-  warnaBebas.value = t.warna;
-  tandaiWarna(t.warna);
-  editor.style.display = 'block';
+// Cari slot foto di titik itu (yang paling depan dicek dulu)
+function cariSlot(p) {
+  const slot = frameAktif.slot;
+  for (let i = 0; i < slot.length; i++) {
+    const q = titikDiSlot(p, slot[i]);
+    if (Math.abs(q.x) <= slot[i].w / 2 && Math.abs(q.y) <= slot[i].h / 2) return i;
+  }
+  return null;
+}
+
+// Kotak putus-putus mengikuti tulisan / foto yang dipilih
+function posisikanSorot() {
+  const s = canvas.clientWidth / canvas.width;
+  let k = null, putar = 0;
+
+  if (teksAktif) k = teksAktif._kotak;
+  if (slotAktif !== null) {
+    k = frameAktif.slot[slotAktif];
+    putar = k.putar || 0;
+  }
+  if (!k) {
+    sorot.style.display = 'none';
+    return;
+  }
+
   sorot.style.display = 'block';
-  posisikanEditor();
-  editorTeks.focus();
-}
-
-function tutupEditor() {
-  teksAktif = null;
-  editor.style.display = 'none';
-  sorot.style.display = 'none';
-}
-
-// Taruh kotak sorot & editor tepat di tulisan yang dipilih
-function posisikanEditor() {
-  if (!teksAktif) return;
-  const k = teksAktif._kotak;
-  const s = canvas.clientWidth / canvas.width; // skala canvas → layar
-
   sorot.style.left = k.x * s + 'px';
   sorot.style.top = k.y * s + 'px';
   sorot.style.width = k.w * s + 'px';
   sorot.style.height = k.h * s + 'px';
-
-  // Editor di bawah tulisan; kalau mentok bawah, pindah ke atas
-  let atas = (k.y + k.h) * s + 8;
-  if (atas + editor.offsetHeight > canvas.clientHeight) {
-    atas = k.y * s - editor.offsetHeight - 8;
-  }
-  let kiri = k.x * s;
-  kiri = Math.max(0, Math.min(kiri, canvas.clientWidth - editor.offsetWidth));
-
-  editor.style.top = Math.max(0, atas) + 'px';
-  editor.style.left = kiri + 'px';
+  sorot.style.transform = `rotate(${putar}deg)`;
 }
 
-function gambarUlang() {
-  gambarSemua();
-  posisikanEditor();
-}
-
-// ===== KLIK & GESER TULISAN =====
-let geser = null; // data saat tulisan sedang digeser
+const jari = new Map(); // jari yang sedang menyentuh layar
+let aksi = null;         // apa yang sedang dilakukan: geser tulisan / foto / cubit
 
 canvas.addEventListener('pointerdown', (e) => {
+  if (stream) return; // saat kamera menyala, gambar tidak bisa disentuh
+  canvas.setPointerCapture(e.pointerId);
+  jari.set(e.pointerId, titikCanvas(e));
+
+  // Dua jari di foto yang dipilih → mode cubit (zoom)
+  if (jari.size === 2 && slotAktif !== null) {
+    const [a, b] = [...jari.values()];
+    const atur = ambilAtur(slotAktif);
+    aksi = { jenis: 'cubit', jarak: Math.hypot(a.x - b.x, a.y - b.y), z: atur.z };
+    return;
+  }
+  if (jari.size > 1) return;
+
   const p = titikCanvas(e);
   const t = cariTeks(p);
-  if (!t) {
-    tutupEditor();
+  if (t) {
+    if (t.ikuti) { t.x = t._x; t.ikuti = false; }
+    aksi = { jenis: 'teks', t, dx: p.x - t.x, dy: p.y - t.y, mulai: p, pindah: false };
     return;
   }
 
-  // Tulisan "ikuti" jadi punya posisi sendiri kalau dipegang
-  if (t.ikuti) {
-    t.x = t._x;
-    t.ikuti = false;
+  const i = cariSlot(p);
+  if (i !== null) {
+    aksi = { jenis: 'foto', i, akhir: p, mulai: p, pindah: false };
+    return;
   }
 
-  geser = { t, dx: p.x - t.x, dy: p.y - t.y, mulai: p, pindah: false };
-  canvas.setPointerCapture(e.pointerId);
+  aksi = { jenis: 'kosong' };
 });
 
 canvas.addEventListener('pointermove', (e) => {
+  if (!jari.has(e.pointerId)) return;
   const p = titikCanvas(e);
+  jari.set(e.pointerId, p);
+  if (!aksi) return;
 
-  // Tidak sedang menggeser → cuma ganti bentuk kursor
-  if (!geser) {
-    canvas.style.cursor = cariTeks(p) ? 'grab' : 'default';
+  if (aksi.jenis === 'cubit' && jari.size === 2) {
+    const [a, b] = [...jari.values()];
+    const atur = ambilAtur(slotAktif);
+    atur.z = Math.min(3, Math.max(1, aksi.z * Math.hypot(a.x - b.x, a.y - b.y) / aksi.jarak));
+    zoomFoto.value = atur.z;
+    gambarSemua();
     return;
   }
 
-  // Baru dianggap "geser" kalau jarinya pindah lebih dari 8px
-  const jauh = Math.hypot(p.x - geser.mulai.x, p.y - geser.mulai.y);
-  if (!geser.pindah && jauh < 8) return;
-
-  if (!geser.pindah) {
-    geser.pindah = true;
-    teksAktif = geser.t;
-    editor.style.display = 'none';
-    sorot.style.display = 'block';
-    canvas.style.cursor = 'grabbing';
+  if (aksi.jenis === 'teks' || aksi.jenis === 'foto') {
+    if (!aksi.pindah && Math.hypot(p.x - aksi.mulai.x, p.y - aksi.mulai.y) < 8) return;
+    aksi.pindah = true;
   }
 
-  geser.t.x = p.x - geser.dx;
-  geser.t.y = p.y - geser.dy;
-  gambarUlang();
-});
-
-canvas.addEventListener('pointerup', () => {
-  if (!geser) return;
-
-  if (geser.pindah) {
-    tutupEditor(); // selesai digeser
-  } else {
-    bukaEditor(geser.t); // cuma diketuk → buka editor
+  if (aksi.jenis === 'teks') {
+    if (teksAktif !== aksi.t) bukaEditorTeks(aksi.t, false);
+    aksi.t.x = p.x - aksi.dx;
+    aksi.t.y = p.y - aksi.dy;
+    gambarSemua();
   }
-  geser = null;
-  canvas.style.cursor = 'grab';
+
+  if (aksi.jenis === 'foto') {
+    const s = frameAktif.slot[aksi.i];
+    const img = fotoList[s.foto ?? aksi.i];
+    if (!img) return;
+    if (slotAktif !== aksi.i) pilihSlot(aksi.i);
+
+    // Geser foto: ikuti arah jari (diputar balik sesuai kemiringan slot)
+    const q1 = titikDiSlot(aksi.akhir, s);
+    const q2 = titikDiSlot(p, s);
+    const atur = ambilAtur(aksi.i);
+    const { sw, sh } = potongFoto(img, s, atur);
+    atur.cx -= (q2.x - q1.x) * (sw / s.w) / img.width;
+    atur.cy -= (q2.y - q1.y) * (sh / s.h) / img.height;
+    aksi.akhir = p;
+    gambarSemua();
+  }
 });
 
-// Di HP: kalau jari menyentuh tulisan, halaman jangan ikut scroll
-canvas.addEventListener('touchstart', (e) => {
-  if (cariTeks(titikCanvas(e.touches[0]))) e.preventDefault();
-}, { passive: false });
+function lepasJari(e) {
+  jari.delete(e.pointerId);
+  if (!aksi || jari.size > 0) return;
 
-// Mengetik
+  // Cuma diketuk (tidak digeser)
+  if (aksi.jenis === 'teks' && !aksi.pindah) bukaEditorTeks(aksi.t, true);
+  if (aksi.jenis === 'foto' && !aksi.pindah) {
+    const s = frameAktif.slot[aksi.i];
+    if (fotoList[s.foto ?? aksi.i]) pilihSlot(aksi.i);
+    else isiSlotKosong(s.foto ?? aksi.i); // slot kosong → pilih foto dari album
+  }
+  if (aksi.jenis === 'kosong') selesaiEdit();
+  aksi = null;
+}
+canvas.addEventListener('pointerup', lepasJari);
+canvas.addEventListener('pointercancel', lepasJari);
+
+
+/* =========================================================
+   9. EDIT TULISAN (panel bawah)
+   ========================================================= */
+function bukaEditorTeks(t, fokus) {
+  slotAktif = null;
+  teksAktif = t;
+  editorTeks.value = t.teks;
+  editorTeks.placeholder = t.label || '';
+  editorFont.value = (t.font.startsWith('italic') ? 'italic|' : '') + t.font.match(/px (.+)$/)[1];
+  warnaBebas.value = t.warna;
+  tandaiWarna(t.warna);
+  tampilkanPanel('teks');
+  posisikanSorot();
+  if (fokus) editorTeks.focus();
+}
+
 editorTeks.addEventListener('input', () => {
   samaGrup(teksAktif).forEach(t => t.teks = editorTeks.value);
-  gambarUlang();
+  gambarSemua();
 });
 
-// Ganti font (ukuran & tebal tetap)
 editorFont.addEventListener('change', () => {
-  // Nilai bisa berupa 'italic|"Playfair Display"' → gaya miring + nama font
   const bagian = editorFont.value.split('|');
   const nama = bagian.pop();
   const miring = bagian[0] === 'italic';
-
   samaGrup(teksAktif).forEach(t => {
-    t.font = t.font.replace(/^italic /, '');          // hapus miring lama
-    t.font = t.font.replace(/px .+$/, 'px ' + nama);  // ganti nama font
-    if (miring) t.font = 'italic ' + t.font;          // tambah miring kalau dipilih
+    t.font = t.font.replace(/^italic /, '').replace(/px .+$/, 'px ' + nama);
+    if (miring) t.font = 'italic ' + t.font;
   });
-  document.fonts.load(teksAktif.font).finally(gambarUlang);
+  document.fonts.load(teksAktif.font).finally(gambarSemua);
 });
 
-// ===== GANTI WARNA =====
-// Bikin kotak-kotak warna di dalam editor
-WARNA.forEach(w => {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'warna';
-  btn.style.background = w;
-  btn.dataset.warna = w;
-  btn.addEventListener('click', () => gantiWarna(w));
-  editorWarna.insertBefore(btn, editorWarna.lastElementChild); // sebelum ikon 🎨
-});
-
-function gantiWarna(w) {
-  samaGrup(teksAktif).forEach(t => t.warna = w);
-  warnaBebas.value = w;
-  tandaiWarna(w);
-  gambarUlang();
-}
-
-// Tandai kotak warna yang sedang dipakai
-function tandaiWarna(w) {
-  editorWarna.querySelectorAll('.warna').forEach(b => {
-    b.classList.toggle('active', b.dataset.warna === w.toLowerCase());
-  });
-}
-
-// Warna bebas dari 🎨
-warnaBebas.addEventListener('input', () => gantiWarna(warnaBebas.value));
-
-// Perkecil / perbesar
 function ubahUkuran(selisih) {
   samaGrup(teksAktif).forEach(t => {
     const lama = parseInt(t.font.match(/(\d+)px/)[1]);
@@ -858,28 +917,113 @@ function ubahUkuran(selisih) {
     t.font = t.font.replace(/\d+px/, baru + 'px');
     if (t.jarakBaris) t.jarakBaris = Math.round(t.jarakBaris * baru / lama);
   });
-  gambarUlang();
+  gambarSemua();
 }
-btnKecil.addEventListener('click', () => ubahUkuran(-2));
-btnBesar.addEventListener('click', () => ubahUkuran(2));
+$('btnKecil').addEventListener('click', () => ubahUkuran(-2));
+$('btnBesar').addEventListener('click', () => ubahUkuran(2));
+$('btnSelesai').addEventListener('click', selesaiEdit);
 
-// Selesai: tombol ✓, tombol Esc, atau klik di luar
-btnSelesai.addEventListener('click', tutupEditor);
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') tutupEditor();
+// Kotak-kotak warna
+WARNA.forEach(w => {
+  const btn = document.createElement('button');
+  btn.className = 'warna';
+  btn.style.background = w;
+  btn.dataset.warna = w;
+  btn.addEventListener('click', () => gantiWarna(w));
+  editorWarna.insertBefore(btn, editorWarna.lastElementChild); // sebelum 🎨
 });
-document.addEventListener('click', (e) => {
-  if (teksAktif && !editor.contains(e.target) && e.target !== canvas) tutupEditor();
-});
-window.addEventListener('resize', posisikanEditor);
+
+function gantiWarna(w) {
+  samaGrup(teksAktif).forEach(t => t.warna = w);
+  warnaBebas.value = w;
+  tandaiWarna(w);
+  gambarSemua();
+}
+
+function tandaiWarna(w) {
+  editorWarna.querySelectorAll('.warna').forEach(b => {
+    b.classList.toggle('active', b.dataset.warna === w.toLowerCase());
+  });
+}
+warnaBebas.addEventListener('input', () => gantiWarna(warnaBebas.value));
 
 
 /* =========================================================
-   5. TAMBAH FOTO
+   10. ATUR FOTO: geser, zoom, ganti (panel bawah)
    ========================================================= */
+function ambilAtur(i) {
+  frameAktif.atur[i] = frameAktif.atur[i] || { z: 1, cx: 0.5, cy: 0.5 };
+  return frameAktif.atur[i];
+}
+
+function pilihSlot(i) {
+  teksAktif = null;
+  slotAktif = i;
+  zoomFoto.value = ambilAtur(i).z;
+  tampilkanPanel('atur');
+  posisikanSorot();
+}
+
+zoomFoto.addEventListener('input', () => {
+  ambilAtur(slotAktif).z = parseFloat(zoomFoto.value);
+  gambarSemua();
+});
+
+$('btnResetFoto').addEventListener('click', () => {
+  frameAktif.atur[slotAktif] = { z: 1, cx: 0.5, cy: 0.5 };
+  zoomFoto.value = 1;
+  gambarSemua();
+});
+
+$('btnSelesaiFoto').addEventListener('click', selesaiEdit);
+
+// Ganti foto di slot yang dipilih
+let nomorGanti = null;
+$('btnGantiFoto').addEventListener('click', () => {
+  const s = frameAktif.slot[slotAktif];
+  isiSlotKosong(s.foto ?? slotAktif);
+});
+
+function isiSlotKosong(nomor) {
+  nomorGanti = nomor;
+  gantiInput.click();
+}
+
+gantiInput.addEventListener('change', async () => {
+  const file = gantiInput.files[0];
+  gantiInput.value = '';
+  if (!file || nomorGanti === null) return;
+  fotoList[nomorGanti] = await createImageBitmap(file);
+  // posisi slot yang memakai foto ini dikembalikan ke tengah
+  frameAktif.slot.forEach((s, i) => {
+    if ((s.foto ?? i) === nomorGanti) delete frameAktif.atur[i];
+  });
+  nomorGanti = null;
+  setelahFotoBerubah();
+});
+
+
+/* =========================================================
+   11. TAMBAH FOTO
+   ========================================================= */
+function jumlahTerisi() {
+  return fotoList.filter(Boolean).length;
+}
+
+// Isi slot kosong pertama
 function tambahFoto(foto) {
-  if (fotoList.length >= jumlahFoto(frameAktif)) return;
-  fotoList.push(foto);
+  const max = jumlahFoto(frameAktif);
+  for (let i = 0; i < max; i++) {
+    if (!fotoList[i]) {
+      fotoList[i] = foto;
+      setelahFotoBerubah();
+      return true;
+    }
+  }
+  return false;
+}
+
+function setelahFotoBerubah() {
   perbaruiPreviewFilter();
   updateTampilan();
   gambarSemua();
@@ -887,91 +1031,109 @@ function tambahFoto(foto) {
 
 function updateTampilan() {
   const max = jumlahFoto(frameAktif);
-  countEl.textContent = fotoList.length;
+  const terisi = jumlahTerisi();
+  countEl.textContent = terisi;
   maxEl.textContent = max;
-  btnSnap.disabled = !stream || fotoList.length >= max;
-  btnDownload.disabled = fotoList.length < max;
+  btnDownload.disabled = terisi < max;
+  btnShutter.classList.toggle('siap', !!stream);
+  infoFoto.textContent = stream
+    ? 'ketuk tombol bulat untuk jepret'
+    : terisi < max ? 'ketuk tombol bulat untuk buka kamera' : 'lengkap! simpan dengan tombol ⬇';
 }
+
+fileInput.addEventListener('change', async () => {
+  for (const file of fileInput.files) {
+    const foto = await createImageBitmap(file);
+    if (!tambahFoto(foto)) break;
+  }
+  fileInput.value = '';
+});
+
+btnReset.addEventListener('click', () => {
+  fotoList = [];
+  frameAktif.atur = {};
+  selesaiEdit();
+  setelahFotoBerubah();
+});
 
 
 /* =========================================================
-   6. KAMERA
+   12. KAMERA
    ========================================================= */
-btnCamera.addEventListener('click', async () => {
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop());
-    stream = null;
-    video.classList.remove('on');
-    btnCamera.textContent = '📷 Buka Kamera';
-    updateTampilan();
-    return;
-  }
-
+async function bukaKamera() {
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user' },
+      video: { facingMode: kameraDepan ? 'user' : 'environment' },
       audio: false
     });
     video.srcObject = stream;
     video.classList.add('on');
-    btnCamera.textContent = '✖ Tutup Kamera';
-    updateTampilan();
+    video.classList.toggle('cermin', kameraDepan);
+    kameraAlat.classList.add('on');
+    selesaiEdit();
   } catch (err) {
+    stream = null;
     alert('Kamera tidak bisa dibuka. Pastikan izin kamera sudah diberikan ya.');
   }
-});
+  updateTampilan();
+}
+
+function tutupKamera() {
+  if (stream) stream.getTracks().forEach(track => track.stop());
+  stream = null;
+  video.classList.remove('on');
+  kameraAlat.classList.remove('on');
+  updateTampilan();
+}
 
 const tunggu = ms => new Promise(r => setTimeout(r, ms));
 
-btnSnap.addEventListener('click', async () => {
-  btnSnap.disabled = true;
-
-  for (let i = 3; i > 0; i--) {
-    btnSnap.textContent = i;
-    await tunggu(1000);
+btnShutter.addEventListener('click', async () => {
+  if (!stream) {
+    if (jumlahTerisi() >= jumlahFoto(frameAktif)) fotoList = []; // mulai ulang
+    return bukaKamera();
   }
-  btnSnap.textContent = 'Jepret';
+  if (sedangJepret) return;
+  sedangJepret = true;
+
+  // Hitung mundur besar di layar
+  hitungEl.classList.add('on');
+  for (let i = 3; i > 0; i--) {
+    hitungEl.textContent = i;
+    await tunggu(800);
+  }
+  hitungEl.classList.remove('on');
 
   const temp = document.createElement('canvas');
   temp.width = video.videoWidth;
   temp.height = video.videoHeight;
   const t = temp.getContext('2d');
-  t.translate(temp.width, 0);
-  t.scale(-1, 1);
-  t.drawImage(video, 0, 0);
-
-  tambahFoto(temp);
-});
-
-
-/* =========================================================
-   7. DARI ALBUM
-   ========================================================= */
-fileInput.addEventListener('change', async () => {
-  for (const file of fileInput.files) {
-    if (fotoList.length >= jumlahFoto(frameAktif)) break;
-    const gambar = await createImageBitmap(file);
-    tambahFoto(gambar);
+  if (kameraDepan) {
+    t.translate(temp.width, 0);
+    t.scale(-1, 1);
   }
-  fileInput.value = '';
+  t.drawImage(video, 0, 0);
+  tambahFoto(temp);
+  sedangJepret = false;
+
+  // Sudah lengkap → kamera ditutup, hasil langsung kelihatan
+  if (jumlahTerisi() >= jumlahFoto(frameAktif)) tutupKamera();
+});
+
+$('btnTutupKamera').addEventListener('click', tutupKamera);
+$('btnBalik').addEventListener('click', () => {
+  kameraDepan = !kameraDepan;
+  tutupKamera();
+  bukaKamera();
 });
 
 
 /* =========================================================
-   8. ULANGI
-   ========================================================= */
-btnReset.addEventListener('click', () => {
-  fotoList = [];
-  perbaruiPreviewFilter();
-  updateTampilan();
-  gambarSemua();
-});
-
-
-/* =========================================================
-   9. DOWNLOAD
+   13. DOWNLOAD
    ========================================================= */
 btnDownload.addEventListener('click', () => {
+  selesaiEdit();
+  gambarSemua();
   canvas.toBlob(async (blob) => {
     const namaFile = `demuse-photobooth-${Date.now()}.png`;
     const file = new File([blob], namaFile, { type: 'image/png' });
@@ -993,22 +1155,15 @@ btnDownload.addEventListener('click', () => {
 
 
 /* =========================================================
-   10. MULAI — tunggu font siap dulu, baru gambar
+   14. MULAI — tunggu font siap dulu, baru gambar
    ========================================================= */
 Promise.all([
-  document.fonts.load('72px Mallica'),
-  document.fonts.load('17px "Kopi Senja"'),
-  document.fonts.load('19px "Kopi Senja Script"'),
-  document.fonts.load('400 20px Inter'),
-  document.fonts.load('700 20px Inter'),
-  document.fonts.load('800 20px Inter'),
-  document.fonts.load('20px "Playfair Display"'),
-  document.fonts.load('italic 20px "Playfair Display"'),
-  document.fonts.load('900 20px Unbounded'),
-  document.fonts.load('20px Horizon'),
-  document.fonts.load('20px Bubblegum'),
-  document.fonts.load('20px "Anak Manja"')
-]).finally(() => {
+  '72px Mallica', '17px "Kopi Senja"', '19px "Kopi Senja Script"',
+  '400 20px Inter', '700 20px Inter', '800 20px Inter',
+  '20px "Playfair Display"', 'italic 20px "Playfair Display"',
+  '900 20px Unbounded', '20px Horizon', '20px Bubblegum', '20px "Anak Manja"'
+].map(f => document.fonts.load(f))).finally(() => {
   perbaruiPreviewFilter();
+  bukaTab('bingkai');
   pilihFrame(FRAMES[0]);
 });
