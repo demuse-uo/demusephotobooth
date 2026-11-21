@@ -13,6 +13,20 @@ const PILIHAN_LOGO = [
 ];
 
 // Untuk bingkai Bubble: tulisan atas (Mallica) + tulisan bawah (Bubblegum)
+// Untuk bingkai Lily: satu baris tulisan
+const PILIHAN_LOGO_SATU = [
+  { nama: 'de Muse cohort',      isi: { 'logo': 'de Muse cohort' } },
+  { nama: 'de Muse of the Year', isi: { 'logo': 'de Muse of the Year' } },
+  { nama: 'member of de Muse',   isi: { 'logo': 'member of de Muse' } }
+];
+
+// Untuk bingkai Pink: "de Muse" (Playfair miring) + "cohort" (Poppins)
+const PILIHAN_LOGO_PINK = [
+  { nama: 'de Muse cohort',      isi: { 'logo-atas': 'de Muse',   'logo-bawah': 'cohort' } },
+  { nama: 'de Muse of the Year', isi: { 'logo-atas': 'de Muse',   'logo-bawah': 'of the Year' } },
+  { nama: 'member of de Muse',   isi: { 'logo-atas': 'member of', 'logo-bawah': 'de Muse' } }
+];
+
 // Untuk bingkai Today's Diary: username ikut berganti
 const PILIHAN_LOGO_DIARY = [
   { nama: 'de Muse cohort',      isi: { 'username': '@demuse.cohort',    'username-label': '@demuse.cohort' } },
@@ -236,6 +250,93 @@ const FRAMES = [
     ],
 
     pilihanTulisan: PILIHAN_LOGO_BUBBLE
+  }
+
+  ,{
+    nama: 'Pink Garden',
+    gambar: 'frames/pink.png',
+    lebar: 1080,
+    tinggi: 1350,
+    latar: '#fde8ef',
+    latarGambar: 'frames/latar-pink.jpg', // foto latar belakang
+
+    slot: [
+      { x: 90,  y: 148, w: 413, h: 335, r: 0, putar: -7.4 },
+      { x: 143, y: 494, w: 409, h: 370, r: 0, putar: -8 },
+      { x: 204, y: 877, w: 407, h: 369, r: 0, putar: -8 },
+      { x: 646, y: 97,  w: 330, h: 267, r: 0, putar: 1.9 },
+      { x: 644, y: 375, w: 326, h: 295, r: 0, putar: 2 },
+      { x: 633, y: 682, w: 330, h: 299, r: 0, putar: 2 }
+    ],
+
+    teks: [
+      { label: 'Logo atas',  grup: 'logo-atas',  teks: 'de Muse', x: 999, y: 1178, rata: 'right', font: 'italic 400 70px "Playfair Display"', warna: '#eea4c1', lebarPas: 300 },
+      { label: 'Logo bawah', grup: 'logo-bawah', teks: 'cohort',  x: 999, y: 1226, rata: 'right', font: 'italic 700 62px Poppins', warna: '#eea4c1', lebarPas: 300 }
+    ],
+
+    pilihanTulisan: PILIHAN_LOGO_PINK
+  },
+
+  {
+    nama: 'Pink Garden (Story)',
+    gambar: 'frames/pink-story.png',
+    lebar: 1080,
+    tinggi: 1920,
+    latar: '#fde8ef',
+    latarGambar: 'frames/latar-pink.jpg',
+
+    slot: [
+      { x: 85,  y: 248,  w: 538, h: 437, r: 0, putar: -4.5 },
+      { x: 130, y: 705,  w: 521, h: 483, r: 0, putar: -5.1 },
+      { x: 185, y: 1209, w: 531, h: 481, r: 0, putar: -5.1 },
+      { x: 653, y: 296,  w: 348, h: 283, r: 0, putar: 1.9 },
+      { x: 650, y: 590,  w: 345, h: 313, r: 0, putar: 2 },
+      { x: 639, y: 915,  w: 349, h: 316, r: 0, putar: 2 }
+    ],
+
+    teks: [
+      { label: 'Logo atas',  grup: 'logo-atas',  teks: 'de Muse', x: 970, y: 108, rata: 'right', font: 'italic 400 70px "Playfair Display"', warna: '#eea4c1', lebarPas: 320 },
+      { label: 'Logo bawah', grup: 'logo-bawah', teks: 'cohort',  x: 970, y: 157, rata: 'right', font: 'italic 700 62px Poppins', warna: '#eea4c1', lebarPas: 320 }
+    ],
+
+    pilihanTulisan: PILIHAN_LOGO_PINK
+  }
+
+  ,{
+    nama: 'Lily',
+    gambar: 'frames/lily.png',
+    lebar: 1080,
+    tinggi: 1350,
+    latar: '#f3ede9',
+
+    slot: [
+      { x: 411, y: 266, w: 577, h: 708, r: 0 }
+    ],
+
+    // jarakHuruf = jarak antar huruf (px)
+    teks: [
+      { label: 'Logo', grup: 'logo', teks: 'de Muse cohort', x: 1007, y: 1252, rata: 'right', font: '46px "Kopi Senja"', warna: '#eea4c1', jarakHuruf: 1, lebarPas: 420 }
+    ],
+
+    pilihanTulisan: PILIHAN_LOGO_SATU
+  },
+
+  {
+    nama: 'Lily (Story)',
+    gambar: 'frames/lily-story.png',
+    lebar: 1080,
+    tinggi: 1920,
+    latar: '#f3ede9',
+
+    slot: [
+      { x: 411, y: 591, w: 578, h: 707, r: 0 }
+    ],
+
+    teks: [
+      { label: 'Logo', grup: 'logo', teks: 'de Muse cohort', x: 1007, y: 1576, rata: 'right', font: '46px "Kopi Senja"', warna: '#eea4c1', jarakHuruf: 1, lebarPas: 420 }
+    ],
+
+    pilihanTulisan: PILIHAN_LOGO_SATU
   }
 
   // , { ...bingkai berikutnya di sini... }
@@ -469,6 +570,13 @@ function pilihFrame(frame) {
 
   selesaiEdit();
   buatPilihanLogo();
+
+  // Siapkan foto latar (sekali saja per bingkai)
+  if (frame.latarGambar && !frame._latar) {
+    frame._latar = new Image();
+    frame._latar.onload = () => { if (frameAktif === frame) gambarSemua(); };
+    frame._latar.src = frame.latarGambar;
+  }
 
   gambarFrame = new Image();
   gambarFrame.onload = () => {
@@ -742,6 +850,7 @@ function gambarTeks(daftar) {
     ctx.font = t.font;
     ctx.fillStyle = t.warna;
     ctx.textAlign = t.rata || 'left';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = (t.jarakHuruf || 0) + 'px';
 
     const x = t.ikuti ? ujungKanan : t.x;
     t._x = x;
@@ -795,6 +904,14 @@ function gambarSemua() {
   const f = frameAktif;
   ctx.fillStyle = f.latar || '#ffffff';
   ctx.fillRect(0, 0, f.lebar, f.tinggi);
+
+  // Foto latar belakang (kalau ada), dipasang memenuhi seluruh gambar
+  if (f.latarGambar && f._latar && f._latar.complete) {
+    const lg = f._latar;
+    const sk = Math.max(f.lebar / lg.width, f.tinggi / lg.height);
+    const w = lg.width * sk, h = lg.height * sk;
+    ctx.drawImage(lg, (f.lebar - w) / 2, (f.tinggi - h) / 2, w, h);
+  }
 
   // Dari slot terakhir, supaya slot bernomor kecil ada di atas
   for (let i = f.slot.length - 1; i >= 0; i--) {
@@ -1320,7 +1437,7 @@ Promise.all([
   '72px Mallica', '17px "Kopi Senja"', '19px "Kopi Senja Script"',
   '400 20px Inter', '700 20px Inter', '800 20px Inter',
   '20px "Playfair Display"', 'italic 20px "Playfair Display"',
-  '900 20px Unbounded', '20px Horizon', '20px Bubblegum', '20px "Anak Manja"'
+  '900 20px Unbounded', '700 20px Poppins', 'italic 700 20px Poppins', '20px Horizon', '20px Bubblegum', '20px "Anak Manja"'
 ].map(f => document.fonts.load(f))).finally(() => {
   perbaruiPreviewFilter();
   bukaTab('bingkai');
