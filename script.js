@@ -264,9 +264,9 @@ const FRAMES = [
       { x: 90,  y: 148, w: 413, h: 335, r: 0, putar: -7.4 },
       { x: 143, y: 494, w: 409, h: 370, r: 0, putar: -8 },
       { x: 204, y: 877, w: 407, h: 369, r: 0, putar: -8 },
-      { x: 646, y: 97,  w: 330, h: 267, r: 0, putar: 1.9 },
-      { x: 644, y: 375, w: 326, h: 295, r: 0, putar: 2 },
-      { x: 633, y: 682, w: 330, h: 299, r: 0, putar: 2 }
+      { x: 646, y: 97,  w: 330, h: 267, r: 0, putar: 1.9, lapis: 1 },
+      { x: 644, y: 375, w: 326, h: 295, r: 0, putar: 2, lapis: 1 },
+      { x: 633, y: 682, w: 330, h: 299, r: 0, putar: 2, lapis: 1 }
     ],
 
     teks: [
@@ -289,9 +289,9 @@ const FRAMES = [
       { x: 85,  y: 248,  w: 538, h: 437, r: 0, putar: -4.5 },
       { x: 130, y: 705,  w: 521, h: 483, r: 0, putar: -5.1 },
       { x: 185, y: 1209, w: 531, h: 481, r: 0, putar: -5.1 },
-      { x: 653, y: 296,  w: 348, h: 283, r: 0, putar: 1.9 },
-      { x: 650, y: 590,  w: 345, h: 313, r: 0, putar: 2 },
-      { x: 639, y: 915,  w: 349, h: 316, r: 0, putar: 2 }
+      { x: 653, y: 296,  w: 348, h: 283, r: 0, putar: 1.9, lapis: 1 },
+      { x: 650, y: 590,  w: 345, h: 313, r: 0, putar: 2, lapis: 1 },
+      { x: 639, y: 915,  w: 349, h: 316, r: 0, putar: 2, lapis: 1 }
     ],
 
     teks: [
@@ -913,18 +913,26 @@ function gambarSemua() {
     ctx.drawImage(lg, (f.lebar - w) / 2, (f.tinggi - h) / 2, w, h);
   }
 
-  // Dari slot terakhir, supaya slot bernomor kecil ada di atas
-  for (let i = f.slot.length - 1; i >= 0; i--) {
+  // Urutan lapisan: slot dengan "lapis" lebih besar ada di depan
+  urutanLapis(f).forEach(i => {
     const s = f.slot[i];
     const nomor = s.foto ?? i;
     if (fotoList[nomor]) gambarFoto(fotoList[nomor], s, f.atur[i]);
     else gambarSlotKosong(s, nomor + 1);
-  }
+  });
 
   ctx.drawImage(gambarFrame, 0, 0, f.lebar, f.tinggi);
   gambarTeks(f.teks);
   posisikanSorot();
   if (!aksi) updateUndo();
+}
+
+// Urutan menggambar slot (paling belakang dulu).
+// Bawaan: slot nomor besar di belakang. Tambah "lapis: 1" supaya
+// sebuah slot selalu di depan slot lain yang bertumpuk dengannya.
+function urutanLapis(f) {
+  return f.slot.map((s, i) => i)
+    .sort((a, b) => ((f.slot[a].lapis || 0) - (f.slot[b].lapis || 0)) || (b - a));
 }
 
 // Ukuran tampilan canvas: dibuat pas dengan ruang yang tersedia
@@ -971,7 +979,7 @@ function titikDiSlot(p, s) {
 // Cari slot foto di titik itu (yang paling depan dicek dulu)
 function cariSlot(p) {
   const slot = frameAktif.slot;
-  for (let i = 0; i < slot.length; i++) {
+  for (const i of urutanLapis(frameAktif).reverse()) { // yang paling depan dulu
     const q = titikDiSlot(p, slot[i]);
     if (Math.abs(q.x) <= slot[i].w / 2 && Math.abs(q.y) <= slot[i].h / 2) return i;
   }
